@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Converts two CloudFormation templates into one nested stack.
+
+Resources:
+  VPC:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://asimonell-vpc.s3.ap-southeast-2.amazonaws.com/vpc.yaml
+
+  EKS:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: VPC
+    Properties:
+      TemplateURL: https://asimonelli-eks.s3.ap-southeast-2.amazonaws.com/cluster.yaml
+
+  Cloud9:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: EKS
+    Properties:
+      TemplateURL: https://asimonelli-cloud9-22.s3.ap-southeast-2.amazonaws.com/cloud9.yaml
+
+  EC2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn: Cloud9
+    Properties:
+      TemplateURL: https://asimonelli-ec2.s3.ap-southeast-2.amazonaws.com/ec2.yaml

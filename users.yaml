@@ -1,0 +1,39 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: users
+
+Resources:
+  AdminUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: "usernamehere"
+      Policies:
+        - PolicyName: AccessAll
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action: "*"
+                Resource: "*"
+
+  AdminUserAccessKey:
+      DependsOn: AdminUser
+      Type: AWS::IAM::AccessKey
+      Properties:
+        UserName:
+          Ref: AdminUser
+Outputs:
+  AdminUser:
+    Value:
+      Ref: AdminUser
+    Description: IAM Admin User
+  AdminUserAccessKey:
+    Value:
+      Ref: AdminUserAccessKey
+    Description: IAM access key for Admin
+  AdminUserSecretAccessKey:
+    Value:
+      Fn::GetAtt:
+        - AdminUserAccessKey
+        - SecretAccessKey
+    Description: IAM User access key for admin

@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Converts two CloudFormation templates into one nested stack.
+
+Resources:
+
+  Env:
+    Type: AWS::Cloud9::EnvironmentEC2
+    Properties: 
+      AutomaticStopTimeMinutes: 30
+      ConnectionType: CONNECT_SSM
+      Description: Cloud9 For Jamming
+      InstanceType: t2.micro
+      Name: EKSJamCloud9-test200
+      SubnetId: !Select [ 0, !Split [ ',', !ImportValue PublicSubnetIds ] ]

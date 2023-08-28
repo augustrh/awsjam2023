@@ -1,0 +1,75 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CFN Template using SSH KeyPair'
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instances
+    Type: String
+    Default: jamkey
+Mappings:
+  RegionMap:
+  #  us-east-1:
+  #    ami: ami-09d3b3274b6c5d4aa
+  #  us-east-2:
+  #    ami: ami-089a545a9ed9893b6
+  #  us-west-1:
+  #    ami: ami-017c001a88dd93847
+  #  us-west-2:
+  #    ami: ami-0d593311db5abb72b
+    ap-southeast-2:
+      ami: ami-0a709bebf4fa9246f
+
+Resources:
+
+  MyInstanceProfile:
+    Type: 'AWS::IAM::InstanceProfile'
+    Properties:
+      Roles:
+        - eks-instance-access-role
+
+  LabInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      SubnetId: !Select [ 0, !Split [ ',', !ImportValue PublicSubnetIds ] ]
+      SecurityGroupIds:
+      - Ref: InstanceSecurityGroup
+      KeyName:
+        Ref: KeyName
+      ImageId: !FindInMap
+        - RegionMap
+        - !Ref 'AWS::Region'
+        - ami
+      IamInstanceProfile: !Ref MyInstanceProfile
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          cd /var/tmp
+          touch hi
+          # wget https://aws-jam-challenge-resources.s3.amazonaws.com/NAME/script.sh
+          # sudo bash /var/tmp/setup-awsjam.sh > /dev/null 2>&1
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access
+      VpcId: !ImportValue VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0
+        Description: SSH into the instance
+
+Outputs:
+  InstanceId:
+    Description: InstanceId of the newly created EC2 instance
+    Value:
+      Ref: LabInstance
+  KeyName:
+    Description: The SSH KeyPair Name
+    Value:
+      Ref: KeyName
+  SshCommand:
+    Description: Command to SSH into the instance
+    Value: !Sub "ssh -i ${KeyName}.pem ec2-user@${LabInstance.PublicIp}"
